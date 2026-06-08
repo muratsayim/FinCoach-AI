@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinCoachAI - Kişisel Finans Yönetim Sistemi</title>
+    <!-- Google Font: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Marked.js for rendering AI Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-base: #0b0f19;
+            --bg-surface: rgba(20, 26, 45, 0.6);
+            --bg-card: rgba(30, 41, 59, 0.4);
+            --border-color: rgba(255, 255, 255, 0.07);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --color-primary: #6366f1;
+            --color-primary-hover: #4f46e5;
+            --color-primary-glow: rgba(99, 102, 241, 0.2);
+            --color-success: #10b981;
+            --color-success-glow: rgba(16, 185, 129, 0.15);
+            --color-danger: #f43f5e;
+            --color-danger-glow: rgba(244, 63, 94, 0.15);
+            --color-warning: #f59e0b;
+            --color-ai: #a855f7;
+            --color-ai-glow: rgba(168, 85, 247, 0.25);
+            --font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.01);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Layout Container */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Header Navigation */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-ai));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+            animation: pulse-glow 3s infinite alternate;
+        }
+
+        .logo-text {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text span {
+            background: linear-gradient(to right, var(--color-primary), var(--color-ai));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .date-badge {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .kpi-card.gelir::before { background-color: var(--color-success); }
+        .kpi-card.gider::before { background-color: var(--color-danger); }
+        .kpi-card.bakiye::before { background-color: var(--color-primary); }
+        .kpi-card.tasarruf::before { background-color: var(--color-ai); }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .kpi-info h3 {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .kpi-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .gelir .kpi-icon-wrapper {
+            background: var(--color-success-glow);
+            color: var(--color-success);
+        }
+
+        .gider .kpi-icon-wrapper {
+            background: var(--color-danger-glow);
+            color: var(--color-danger);
+        }
+
+        .bakiye .kpi-icon-wrapper {
+            background: var(--color-primary-glow);
+            color: var(--color-primary);
+        }
+
+        .tasarruf .kpi-icon-wrapper {
+            background: var(--color-ai-glow);
+            color: var(--color-ai);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            margin-top: 0.75rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--color-primary), var(--color-ai));
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+
+        /* Main Sections Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .glass-panel {
+            background: var(--bg-surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            position: relative;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel-title i {
+            color: var(--color-primary);
+        }
+
+        /* Chart Section Controls */
+        .chart-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            padding: 2px;
+            border-radius: var(--radius-md);
+        }
+
+        .chart-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-size: 0.85rem;
+        }
+
+        .chart-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 320px;
+            width: 100%;
+        }
+
+        /* AI Coach Panel styling */
+        .ai-panel {
+            border-color: rgba(168, 85, 247, 0.2);
+            background: linear-gradient(135deg, rgba(20, 26, 45, 0.6) 0%, rgba(30, 20, 45, 0.6) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .ai-panel .panel-title i {
+            color: var(--color-ai);
+        }
+
+        .ai-content {
+            flex-grow: 1;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .ai-content h3 {
+            color: var(--text-primary);
+            margin: 1.25rem 0 0.5rem 0;
+            font-size: 1.05rem;
+            border-left: 3px solid var(--color-ai);
+            padding-left: 8px;
+        }
+
+        .ai-content h3:first-of-type {
+            margin-top: 0;
+        }
+
+        .ai-content p {
+            margin-bottom: 0.75rem;
+        }
+
+        .ai-content ul {
+            margin-left: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .ai-content li {
+            margin-bottom: 0.4rem;
+        }
+
+        .ai-content strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .ai-empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .ai-empty-icon {
+            font-size: 3rem;
+            color: var(--color-ai);
+            animation: bounce 2s infinite;
+        }
+
+        .ai-action-btn {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-ai));
+            color: #ffffff;
+            border: none;
+            padding: 0.85rem 1.75rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .ai-action-btn:hover {
+            opacity: 0.95;
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.6);
+        }
+
+        .ai-action-btn:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Bottom Section Grid */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Transaction List */
+        .transaction-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .transaction-list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .transaction-row {
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition-smooth);
+        }
+
+        .transaction-row:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .transaction-row td {
+            padding: 1rem 0.75rem;
+            vertical-align: middle;
+        }
+
+        .transaction-category-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .icon-yemek { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .icon-ulasim { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+        .icon-fatura { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .icon-eglence { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .icon-maas { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        .icon-yatirim { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
+        .icon-diger { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+
+        .tx-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .tx-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .tx-category {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .tx-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .tx-amount {
+            font-weight: 700;
+            font-size: 1rem;
+            text-align: right;
+        }
+
+        .tx-amount.gelir {
+            color: var(--color-success);
+        }
+
+        .tx-amount.gider {
+            color: var(--color-danger);
+        }
+
+        .tx-actions {
+            text-align: right;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .action-btn.delete:hover {
+            background: var(--color-danger-glow);
+            color: var(--color-danger);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .form-control:focus {
+            border-color: var(--color-primary);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 10px var(--color-primary-glow);
+        }
+
+        select.form-control option {
+            background-color: #0b0f19;
+            color: #f8fafc;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--color-primary);
+            color: #ffffff;
+            border: none;
+            padding: 0.85rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 14px var(--color-primary-glow);
+        }
+
+        .btn-submit:hover {
+            background: var(--color-primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.85rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            margin-top: 0.5rem;
+            width: 100%;
+            display: none;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        /* Loading & Alert Effects */
+        .pulse-loader {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--color-ai);
+            animation: dot-pulse 1.5s infinite ease-in-out;
+        }
+
+        .pulse-loader:nth-child(2) { animation-delay: 0.3s; }
+        .pulse-loader:nth-child(3) { animation-delay: 0.6s; }
+
+        .loader-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 2rem 0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--color-primary);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .toast.success { border-left-color: var(--color-success); }
+        .toast.success i { color: var(--color-success); }
+        .toast.error { border-left-color: var(--color-danger); }
+        .toast.error i { color: var(--color-danger); }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Keyframes */
+        @keyframes pulse-glow {
+            from { filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.3)); }
+            to { filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.6)); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes dot-pulse {
+            0%, 100% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* Switch Toggle Styling */
+        .switch input:checked + .slider {
+            background-color: var(--color-ai) !important;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        .switch input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* Auth Screen Styling */
+        .auth-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg-base);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.12) 0%, transparent 40%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 1.5rem;
+            transition: var(--transition-smooth);
+        }
+
+        .auth-card {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            width: 1000px;
+            max-width: 100%;
+            height: 650px;
+            background: rgba(20, 26, 45, 0.4);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .auth-card {
+                grid-template-columns: 1fr;
+                height: auto;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            .auth-left {
+                display: none;
+            }
+        }
+
+        .auth-left {
+            padding: 3.5rem 3rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auth-logo-icon {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-ai));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+        }
+
+        .auth-logo span {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-brand-text {
+            margin-top: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .auth-brand-text h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #ffffff, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-brand-text p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .auth-features {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .auth-feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        .auth-feature-item i {
+            color: var(--color-primary);
+            font-size: 1.1rem;
+            text-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+        }
+
+        .auth-footer {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 2rem;
+        }
+
+        .auth-right {
+            padding: 3.5rem 3rem;
+            background: rgba(15, 23, 42, 0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .auth-form-container {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .auth-form-container.active {
+            display: flex;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .auth-form-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--color-primary), var(--color-ai));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-form-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .input-icon-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .input-icon-wrapper .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            pointer-events: none;
+            transition: var(--transition-smooth);
+        }
+
+        .input-icon-wrapper .form-control {
+            padding-left: 2.75rem;
+        }
+
+        .input-icon-wrapper .form-control:focus ~ .input-icon {
+            color: var(--color-primary);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: var(--transition-smooth);
+        }
+
+        .toggle-password:hover {
+            color: var(--text-primary);
+        }
+
+        .auth-btn {
+            margin-top: 1.5rem;
+            padding: 0.85rem;
+            font-size: 0.95rem;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .auth-switch a {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition-smooth);
+        }
+
+        .auth-switch a:hover {
+            color: var(--color-ai);
+            text-decoration: underline;
+        }
+
+        /* User welcome badge & header modifications */
+        .user-welcome-badge {
+            background: linear-gradient(135deg, var(--color-primary-glow), var(--color-ai-glow));
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .user-welcome-badge i {
+            color: var(--color-primary);
+        }
+
+        .btn-logout {
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+            color: var(--color-danger);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-logout:hover {
+            background: rgba(244, 63, 94, 0.2);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Auth Container (Login / Register Screen) -->
+    <div class="auth-container" id="authContainer">
+        <div class="auth-card">
+            <!-- Left Panel: Branding / Slogan / Features -->
+            <div class="auth-left">
+                <div>
+                    <div class="auth-logo">
+                        <i class="fa-solid fa-brain auth-logo-icon"></i>
+                        <span>FinCoach<span>AI</span></span>
+                    </div>
+                    <div class="auth-brand-text">
+                        <h2>Geleceğinizi Finansal Zeka ile Şekillendirin</h2>
+                        <p>FinCoachAI ile bütçenizi kontrol edin, harcamalarınızı analiz edin ve size özel yapay zeka tavsiyeleriyle birikimlerinizi katlayın.</p>
+                    </div>
+                    <div class="auth-features">
+                        <div class="auth-feature-item">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Yapay Zeka Destekli Tasarruf Koçu</span>
+                        </div>
+                        <div class="auth-feature-item">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Detaylı Kategori ve Trend Analiz Grafikleri</span>
+                        </div>
+                        <div class="auth-feature-item">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Güvenli Oturum ve SHA-256 Veri Koruması</span>
+                        </div>
+                        <div class="auth-feature-item">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Kolay Gelir/Gider Kayıt Yönetimi</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="auth-footer">
+                    <span>© 2026 FinCoachAI. Tüm hakları saklıdır.</span>
+                </div>
+            </div>
+            
+            <!-- Right Panel: Forms -->
+            <div class="auth-right">
+                <!-- Login Form -->
+                <div id="loginFormContainer" class="auth-form-container active">
+                    <h2 class="auth-form-title">Hesabınıza Giriş Yapın</h2>
+                    <p class="auth-form-subtitle">Finansal yolculuğunuza devam etmek için bilgilerinizi girin.</p>
+                    
+                    <form id="loginForm" onsubmit="handleLoginSubmit(event)" autocomplete="off">
+                        <div class="form-group">
+                            <label for="loginEmail">E-posta Adresi</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-envelope input-icon"></i>
+                                <input type="email" id="loginEmail" class="form-control" required autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Şifre</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="loginPassword" class="form-control" required autocomplete="off">
+                                <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility('loginPassword', this)"></i>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit auth-btn" id="btnLoginSubmit">Giriş Yap</button>
+                    </form>
+                    
+                    <div class="auth-switch">
+                        Henüz bir hesabınız yok mu? <a href="#" onclick="switchAuthMode('register')">Yeni Hesap Oluştur (Kayıt Ol)</a>
+                    </div>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerFormContainer" class="auth-form-container">
+                    <h2 class="auth-form-title">Yeni Hesap Oluştur</h2>
+                    <p class="auth-form-subtitle">Hemen kaydolun ve bütçenizi akıllıca yönetmeye başlayın.</p>
+                    
+                    <form id="registerForm" onsubmit="handleRegisterSubmit(event)" autocomplete="off">
+                        <div class="form-group">
+                            <label for="registerName">Ad Soyad</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-user input-icon"></i>
+                                <input type="text" id="registerName" class="form-control" required autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerEmail">E-posta Adresi</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-envelope input-icon"></i>
+                                <input type="email" id="registerEmail" class="form-control" required autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Şifre</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="registerPassword" class="form-control" required autocomplete="off">
+                                <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility('registerPassword', this)"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPasswordConfirm">Şifre Tekrar</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="registerPasswordConfirm" class="form-control" required autocomplete="off">
+                                <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility('registerPasswordConfirm', this)"></i>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit auth-btn" id="btnRegisterSubmit">Kayıt Ol ve Başla</button>
+                    </form>
+                    
+                    <div class="auth-switch">
+                        Zaten bir hesabınız var mı? <a href="#" onclick="switchAuthMode('login')">Hesabınıza Giriş Yapın</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" style="display: none;">
+        <!-- Header -->
+        <header>
+            <div class="logo-container">
+                <i class="fa-solid fa-brain logo-icon"></i>
+                <div class="logo-text">FinCoach<span>AI</span></div>
+            </div>
+            <div class="header-meta">
+                <div class="user-welcome-badge" id="userWelcomeBadge">
+                    <i class="fa-solid fa-circle-user"></i>
+                    <span id="welcomeUserName">Kullanıcı</span>
+                </div>
+                <div class="date-badge" id="currentDate">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span>22 Mayıs 2026</span>
+                </div>
+                <button class="btn-logout" id="btnLogout" onclick="handleLogout()">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Çıkış Yap</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- KPI Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card gelir">
+                <div class="kpi-info">
+                    <h3>Toplam Gelir</h3>
+                    <div class="kpi-value" id="kpiGelir">0.00 TL</div>
+                </div>
+                <div class="kpi-icon-wrapper">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                </div>
+            </div>
+            <div class="kpi-card gider">
+                <div class="kpi-info">
+                    <h3>Toplam Gider</h3>
+                    <div class="kpi-value" id="kpiGider">0.00 TL</div>
+                </div>
+                <div class="kpi-icon-wrapper">
+                    <i class="fa-solid fa-arrow-trend-down"></i>
+                </div>
+            </div>
+            <div class="kpi-card bakiye">
+                <div class="kpi-info">
+                    <h3>Net Bakiye</h3>
+                    <div class="kpi-value" id="kpiBakiye">0.00 TL</div>
+                </div>
+                <div class="kpi-icon-wrapper">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+            </div>
+            <div class="kpi-card tasarruf">
+                <div class="kpi-info">
+                    <h3>Tasarruf Oranı</h3>
+                    <div class="kpi-value" id="kpiTasarruf">%0</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="kpiTasarrufBar"></div>
+                    </div>
+                </div>
+                <div class="kpi-icon-wrapper">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chart and AI Coach Row -->
+        <div class="main-grid">
+            <!-- Charts Panel -->
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Finansal Grafikler</span>
+                    </div>
+                    <div class="chart-toggle">
+                        <button class="chart-btn active" id="btnTrend" onclick="switchChart('trend')">Aylık Değişim</button>
+                        <button class="chart-btn" id="btnCategory" onclick="switchChart('category')">Harcama Dağılımı</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="financeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- AI Coach Panel -->
+            <div class="glass-panel ai-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-robot"></i>
+                        <span>AI Tasarruf Koçu</span>
+                    </div>
+                    <button class="action-btn" id="btnClearAdvice" onclick="clearAdvice()" title="Önerileri Sıfırla" style="display: none; width: auto; height: auto; padding: 6px 10px; background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.2); border-radius: 8px;">
+                        <i class="fa-solid fa-trash-can" style="color: var(--color-danger); font-size: 0.85rem;"></i>
+                    </button>
+                </div>
+
+                <!-- AI Config Section -->
+                <div class="ai-config-panel" style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-bolt" style="color: var(--color-ai);"></i> Yapay Zeka Modu
+                        </span>
+                        <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 22px;">
+                            <input type="checkbox" id="aiModeToggle" onchange="toggleAiMode()" style="opacity: 0; width: 0; height: 0;">
+                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 22px;"></span>
+                        </label>
+                    </div>
+                    <div id="apiKeyContainer" style="display: none; transition: var(--transition-smooth); margin-top: 0.75rem;">
+                        <label for="userApiKey" style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Gemini API Anahtarı</label>
+                        <div style="position: relative;">
+                            <input type="password" id="userApiKey" class="form-control" placeholder="AIzaSy..." style="padding: 0.5rem 2.25rem 0.5rem 0.75rem; font-size: 0.85rem; background: rgba(255,255,255,0.02);" oninput="saveApiKey()">
+                            <i class="fa-solid fa-eye" id="toggleApiKeyVisibility" onclick="toggleApiKeyVisibility()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-secondary); font-size: 0.9rem;"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ai-content" id="aiContent">
+                    <div class="ai-empty-state">
+                        <i class="fa-solid fa-wand-magic-sparkles ai-empty-icon"></i>
+                        <p>Finansal verilerinizi analiz edip size özel tasarruf önerileri ve gelecek senaryoları üretmek için hazır.</p>
+                    </div>
+                </div>
+                <button class="ai-action-btn" id="btnGetAiAdvice" onclick="fetchAiAdvice()">
+                    <i class="fa-solid fa-sparkles"></i> AI Koçtan Tavsiye Al
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Transactions and Form Row -->
+        <div class="bottom-grid">
+            <!-- Transaction List -->
+            <div class="glass-panel transaction-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>İşlem Geçmişi</span>
+                    </div>
+                </div>
+                <div class="transaction-list-container">
+                    <table class="transaction-table">
+                        <tbody id="transactionList">
+                            <!-- JS ile doldurulacak -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Add/Edit Form -->
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-pen-to-square" id="formIcon"></i>
+                        <span id="formTitle">İşlem Ekle</span>
+                    </div>
+                </div>
+                <form id="transactionForm" onsubmit="handleFormSubmit(event)">
+                    <input type="hidden" id="txId">
+                    
+                    <div class="form-group">
+                        <label for="txAciklama">Açıklama</label>
+                        <input type="text" id="txAciklama" class="form-control" placeholder="Örn: Market alışverişi, Maaş" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="txTutar">Tutar (TL)</label>
+                            <input type="number" id="txTutar" class="form-control" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="txTur">İşlem Türü</label>
+                            <select id="txTur" class="form-control" onchange="adaptCategoryChoices()" required>
+                                <option value="GIDER">Gider</option>
+                                <option value="GELIR">Gelir</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="txKategori">Kategori</label>
+                            <select id="txKategori" class="form-control" required>
+                                <!-- JS ile doldurulacak -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="txTarih">Tarih</label>
+                            <input type="date" id="txTarih" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="btnSubmit">Kaydet</button>
+                    <button type="button" class="btn-cancel" id="btnCancel" onclick="resetForm()">Vazgeç</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">
+        <i id="toastIcon" class="fa-solid"></i>
+        <span id="toastMsg">İşlem başarılı.</span>
+    </div>
+
+    <!-- JavaScript Execution Logic -->
+    <script>
+        // API Base URLs
+        const API_BASE = 'http://localhost:8080/api';
+        
+        // State variables
+        let userId = sessionStorage.getItem('fincoach_user_id');
+        let userName = sessionStorage.getItem('fincoach_user_name');
+        let transactions = [];
+        let financeChart = null;
+        let activeChartType = 'trend'; // 'trend' or 'category'
+        let currentAnalysis = {};
+
+        // Categories structure
+        const categories = {
+            GIDER: ['Yemek', 'Ulaşım', 'Fatura', 'Eğlence', 'Diğer'],
+            GELIR: ['Maaş', 'Yatırım', 'Diğer']
+        };
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set current date
+            const dateSpan = document.querySelector('#currentDate span');
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            dateSpan.textContent = new Date().toLocaleDateString('tr-TR', options);
+            
+            // Set default date input to today
+            document.getElementById('txTarih').value = new Date().toISOString().substring(0, 10);
+
+            // Adapt categories in dropdown
+            adaptCategoryChoices();
+
+            // Check if user is authenticated
+            checkAuthStatus();
+        });
+
+        // Authentication State Checker
+        function checkAuthStatus() {
+            userId = sessionStorage.getItem('fincoach_user_id');
+            userName = sessionStorage.getItem('fincoach_user_name');
+
+            if (!userId) {
+                // Clear input fields to keep them empty on load/logout
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('registerName').value = '';
+                document.getElementById('registerEmail').value = '';
+                document.getElementById('registerPassword').value = '';
+                document.getElementById('registerPasswordConfirm').value = '';
+
+                // Show login form, hide dashboard
+                document.getElementById('authContainer').style.display = 'flex';
+                document.querySelector('.app-container').style.display = 'none';
+            } else {
+                // Hide login form, show dashboard
+                document.getElementById('authContainer').style.display = 'none';
+                document.querySelector('.app-container').style.display = 'block';
+                document.getElementById('welcomeUserName').textContent = userName;
+                
+                // Fetch base data
+                loadDashboardData();
+
+                // Init AI config
+                initAiConfig();
+                
+                // Load latest advice from session if present
+                loadLatestAdvice();
+            }
+        }
+
+        // Switch between login and register forms
+        function switchAuthMode(mode) {
+            if (mode === 'register') {
+                document.getElementById('loginFormContainer').classList.remove('active');
+                document.getElementById('registerFormContainer').classList.add('active');
+            } else {
+                document.getElementById('registerFormContainer').classList.remove('active');
+                document.getElementById('loginFormContainer').classList.add('active');
+            }
+        }
+
+        // Toggle password input visibility
+        function togglePasswordVisibility(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash toggle-password';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye toggle-password';
+            }
+        }
+
+        // Handle Login Submission
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const sifre = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('btnLoginSubmit');
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Giriş Yapılıyor...`;
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, sifre })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    sessionStorage.setItem('fincoach_user_id', data.id);
+                    sessionStorage.setItem('fincoach_user_name', data.adSoyad);
+                    showToast("Başarıyla giriş yapıldı.", "success");
+                    
+                    // Reset forms
+                    document.getElementById('loginForm').reset();
+                    
+                    // Transition to dashboard
+                    checkAuthStatus();
+                } else {
+                    showToast(data.message || "Giriş başarısız. Bilgilerinizi kontrol edin.", "error");
+                }
+            } catch (err) {
+                showToast("Sunucu ile bağlantı kurulamadı.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `Giriş Yap`;
+            }
+        }
+
+        // Handle Registration Submission
+        async function handleRegisterSubmit(e) {
+            e.preventDefault();
+            const adSoyad = document.getElementById('registerName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const sifre = document.getElementById('registerPassword').value;
+            const sifreTekrar = document.getElementById('registerPasswordConfirm').value;
+            const btn = document.getElementById('btnRegisterSubmit');
+
+            if (sifre !== sifreTekrar) {
+                showToast("Şifreler uyuşmuyor.", "error");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Kaydediliyor...`;
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adSoyad, email, sifre })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    showToast("Kayıt başarıyla tamamlandı! Giriş yapabilirsiniz.", "success");
+                    document.getElementById('registerForm').reset();
+                    switchAuthMode('login');
+                } else {
+                    showToast(data.message || "Kayıt başarısız.", "error");
+                }
+            } catch (err) {
+                showToast("Sunucu ile bağlantı kurulamadı.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `Kayıt Ol ve Başla`;
+            }
+        }
+
+        // Handle Logout Action
+        function handleLogout() {
+            if (!confirm("Oturumu kapatmak istediğinize emin misiniz?")) return;
+            
+            // Clear session storage
+            sessionStorage.removeItem('fincoach_user_id');
+            sessionStorage.removeItem('fincoach_user_name');
+            sessionStorage.removeItem('fincoach_latest_advice');
+            
+            showToast("Başarıyla çıkış yapıldı.", "success");
+            
+            // Clear state and chart
+            transactions = [];
+            currentAnalysis = {};
+            if (financeChart) {
+                financeChart.destroy();
+                financeChart = null;
+            }
+            
+            resetForm();
+            checkAuthStatus();
+        }
+
+        // Adapt select choices based on Gelir or Gider selection
+        function adaptCategoryChoices() {
+            const tur = document.getElementById('txTur').value;
+            const selectKategori = document.getElementById('txKategori');
+            selectKategori.innerHTML = '';
+            
+            categories[tur].forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                selectKategori.appendChild(opt);
+            });
+        }
+
+        // Fetch Transactions & Stats
+        async function loadDashboardData() {
+            try {
+                // Fetch analysis data
+                const analysisRes = await fetch(`${API_BASE}/islemler/analiz`, {
+                    headers: { 'X-User-Id': userId }
+                });
+                if (analysisRes.ok) {
+                    currentAnalysis = await analysisRes.json();
+                    updateKpis(currentAnalysis);
+                    renderChart();
+                }
+
+                // Fetch transactions list
+                const txRes = await fetch(`${API_BASE}/islemler`, {
+                    headers: { 'X-User-Id': userId }
+                });
+                if (txRes.ok) {
+                    transactions = await txRes.json();
+                    renderTransactionsList(transactions);
+                }
+            } catch (e) {
+                console.error("Dashboard yüklenirken hata:", e);
+                showToast("Backend sunucusu ile bağlantı kurulamadı. Lütfen sunucuyu başlatın.", "error");
+            }
+        }
+
+        // Update top KPI cards
+        function updateKpis(data) {
+            const formatCurrency = (val) => {
+                return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' })
+                    .format(val || 0).replace("TRY", "TL");
+            };
+
+            document.getElementById('kpiGelir').textContent = formatCurrency(data.toplamGelir);
+            document.getElementById('kpiGider').textContent = formatCurrency(data.toplamGider);
+            
+            const bakiyeEl = document.getElementById('kpiBakiye');
+            bakiyeEl.textContent = formatCurrency(data.netBakiye);
+            if (data.netBakiye < 0) {
+                bakiyeEl.style.color = 'var(--color-danger)';
+            } else {
+                bakiyeEl.style.color = 'var(--text-primary)';
+            }
+
+            const rawRate = Math.min(Math.max(data.tasarrufOrani || 0, 0), 100);
+            document.getElementById('kpiTasarruf').textContent = `%${Math.round(data.tasarrufOrani || 0)}`;
+            document.getElementById('kpiTasarrufBar').style.width = `${rawRate}%`;
+        }
+
+        // Render Transactions List Table
+        function renderTransactionsList(list) {
+            const listContainer = document.getElementById('transactionList');
+            
+            if (list.length === 0) {
+                listContainer.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Henüz işlem kaydı girilmedi.</td></tr>';
+                return;
+            }
+
+            const getIconClass = (cat) => {
+                const norm = cat.toLowerCase();
+                if (norm.includes('yemek')) return 'fa-bowl-food icon-yemek';
+                if (norm.includes('ulaşım')) return 'fa-train-subway icon-ulasim';
+                if (norm.includes('fatura') || norm.includes('kira')) return 'fa-file-invoice-dollar icon-fatura';
+                if (norm.includes('eğlence')) return 'fa-gamepad icon-eglence';
+                if (norm.includes('maaş')) return 'fa-money-bill-wave icon-maas';
+                if (norm.includes('yatırım')) return 'fa-chart-pie icon-yatirim';
+                return 'fa-tags icon-diger';
+            };
+
+            listContainer.innerHTML = list.map(tx => {
+                const formattedTutar = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' })
+                    .format(tx.tutar).replace("TRY", "TL");
+                const dateArr = tx.tarih.split('-');
+                const formattedDate = `${dateArr[2]}.${dateArr[1]}.${dateArr[0]}`;
+
+                return `
+                    <tr class="transaction-row">
+                        <td width="50">
+                            <div class="transaction-category-icon ${getIconClass(tx.kategori)}">
+                                <i class="fa-solid ${getIconClass(tx.kategori).split(' ')[0]}"></i>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="tx-details">
+                                <span class="tx-title">${tx.aciklama}</span>
+                                <span class="tx-category">${tx.kategori}</span>
+                            </div>
+                        </td>
+                        <td class="tx-date">${formattedDate}</td>
+                        <td class="tx-amount ${tx.tur.toLowerCase()}">
+                            ${tx.tur === 'GELIR' ? '+' : '-'}${formattedTutar}
+                        </td>
+                        <td class="tx-actions">
+                            <button class="action-btn" onclick="editTransaction(${tx.id})">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button class="action-btn delete" onclick="deleteTransaction(${tx.id})">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Handle Add/Edit Form Submit
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('txId').value;
+            const aciklama = document.getElementById('txAciklama').value;
+            const tutar = parseFloat(document.getElementById('txTutar').value);
+            const tur = document.getElementById('txTur').value;
+            const kategori = document.getElementById('txKategori').value;
+            const tarih = document.getElementById('txTarih').value;
+
+            const payload = { aciklama, tutar, tur, kategori, tarih };
+            
+            try {
+                let response;
+                if (id) {
+                    // Update
+                    response = await fetch(`${API_BASE}/islemler/${id}`, {
+                        method: 'PUT',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-User-Id': userId
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    // Create
+                    response = await fetch(`${API_BASE}/islemler`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-User-Id': userId
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                if (response.ok) {
+                    showToast(id ? "İşlem güncellendi." : "İşlem eklendi.", "success");
+                    resetForm();
+                    loadDashboardData();
+                } else {
+                    const err = await response.json();
+                    showToast(`Hata: ${err.message || 'Başarısız'}`, "error");
+                }
+            } catch (err) {
+                showToast("Sunucu hatası oluştu.", "error");
+            }
+        }
+
+        // Edit Mode Trigger
+        function editTransaction(id) {
+            const tx = transactions.find(t => t.id === id);
+            if (!tx) return;
+
+            document.getElementById('txId').value = tx.id;
+            document.getElementById('txAciklama').value = tx.aciklama;
+            document.getElementById('txTutar').value = tx.tutar;
+            document.getElementById('txTur').value = tx.tur;
+            
+            // Adapt choices before setting category value
+            adaptCategoryChoices();
+            document.getElementById('txKategori').value = tx.kategori;
+            document.getElementById('txTarih').value = tx.tarih;
+
+            // Update UI state
+            document.getElementById('formTitle').textContent = 'İşlemi Güncelle';
+            document.getElementById('formIcon').className = 'fa-solid fa-pen-nib';
+            document.getElementById('btnSubmit').textContent = 'Güncelle';
+            document.getElementById('btnCancel').style.display = 'block';
+        }
+
+        // Reset form to add state
+        function resetForm() {
+            document.getElementById('txId').value = '';
+            document.getElementById('transactionForm').reset();
+            document.getElementById('txTarih').value = new Date().toISOString().substring(0, 10);
+            adaptCategoryChoices();
+
+            document.getElementById('formTitle').textContent = 'İşlem Ekle';
+            document.getElementById('formIcon').className = 'fa-solid fa-pen-to-square';
+            document.getElementById('btnSubmit').textContent = 'Kaydet';
+            document.getElementById('btnCancel').style.display = 'none';
+        }
+
+        // Delete Transaction
+        async function deleteTransaction(id) {
+            if (!confirm("Bu işlemi silmek istediğinize emin misiniz?")) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/islemler/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'X-User-Id': userId }
+                });
+                if (res.ok) {
+                    showToast("İşlem başarıyla silindi.", "success");
+                    loadDashboardData();
+                    if (document.getElementById('txId').value == id) {
+                        resetForm();
+                    }
+                } else {
+                    showToast("İşlem silinemedi.", "error");
+                }
+            } catch (err) {
+                showToast("Sunucu hatası oluştu.", "error");
+            }
+        }
+
+        // Fetch AI Saving Advice
+        async function fetchAiAdvice() {
+            const aiMode = document.getElementById('aiModeToggle').checked;
+            const apiKey = document.getElementById('userApiKey').value.trim();
+
+            if (aiMode && !apiKey.trim()) {
+                showToast("Yapay Zeka Modu aktif ancak API anahtarı girilmemiş. Lütfen geçerli bir anahtar girin.", "error");
+                return;
+            }
+
+            const container = document.getElementById('aiContent');
+            const btn = document.getElementById('btnGetAiAdvice');
+            
+            // Loading State
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analiz Ediliyor...`;
+            container.innerHTML = `
+                <div class="loader-container">
+                    <div class="pulse-loader"></div>
+                    <div class="pulse-loader"></div>
+                    <div class="pulse-loader"></div>
+                </div>
+                <p style="text-align: center; font-size: 0.9rem; color: var(--color-ai);">AI Tasarruf Koçu harcama alışkanlıklarınızı analiz edip kişiselleştirilmiş senaryolar hazırlıyor. Gemini API üzerinden detaylı raporun üretilmesi 5-10 saniye sürebilir, lütfen bekleyin...</p>
+            `;
+
+            const headers = {
+                'X-AI-Mode-Enabled': aiMode ? 'true' : 'false',
+                'X-User-Id': userId
+            };
+            if (aiMode && apiKey) {
+                headers['X-Gemini-API-Key'] = apiKey;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/tasarruf-kocu/tavsiye`, {
+                    headers: headers
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    // Save to session storage
+                    sessionStorage.setItem('fincoach_latest_advice', data.tavsiye);
+                    
+                    // Show clear button
+                    document.getElementById('btnClearAdvice').style.display = 'block';
+                    
+                    // Render markdown using Marked.js safely
+                    container.innerHTML = marked.parse(data.tavsiye);
+                    showToast("AI Tasarruf tavsiyeleri başarıyla üretildi.", "success");
+                } else {
+                    container.innerHTML = `<p style="color: var(--color-danger); text-align: center;">Tavsiye alınamadı. Lütfen daha sonra tekrar deneyin.</p>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<p style="color: var(--color-danger); text-align: center;">Sunucu hatası. API'ye ulaşılamadı.</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-sparkles"></i> AI Koçtan Tavsiye Al`;
+            }
+        }
+
+        // Charting Logic (Chart.js)
+        function switchChart(type) {
+            activeChartType = type;
+            document.getElementById('btnTrend').classList.toggle('active', type === 'trend');
+            document.getElementById('btnCategory').classList.toggle('active', type === 'category');
+            renderChart();
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            
+            // Destroy existing chart to avoid overlay bugs
+            if (financeChart) {
+                financeChart.destroy();
+            }
+
+            if (activeChartType === 'trend') {
+                // Monthly Line/Bar chart
+                const aylikVeri = currentAnalysis.aylikVeriler || {};
+                const labels = Object.keys(aylikVeri);
+                const gelirler = labels.map(k => aylikVeri[k].gelir);
+                const giderler = labels.map(k => aylikVeri[k].gider);
+
+                financeChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Gelir',
+                                data: gelirler,
+                                backgroundColor: 'rgba(16, 185, 129, 0.4)',
+                                borderColor: '#10b981',
+                                borderWidth: 2,
+                                borderRadius: 6,
+                            },
+                            {
+                                label: 'Gider',
+                                data: giderler,
+                                backgroundColor: 'rgba(244, 63, 94, 0.4)',
+                                borderColor: '#f43f5e',
+                                borderWidth: 2,
+                                borderRadius: 6,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#94a3b8', font: { family: 'Outfit' } }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#94a3b8', font: { family: 'Outfit' } }
+                            },
+                            y: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#94a3b8', font: { family: 'Outfit' } }
+                            }
+                        }
+                    }
+                });
+            } else {
+                // Category breakdown Doughnut chart
+                const kategoriGiderleri = currentAnalysis.kategoriGiderleri || {};
+                const labels = Object.keys(kategoriGiderleri);
+                const values = Object.values(kategoriGiderleri);
+
+                if (labels.length === 0) {
+                    // Show fallback empty state if no expenses
+                    ctx.font = '16px Outfit';
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Gösterilecek gider kategorisi bulunmuyor.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                    return;
+                }
+
+                financeChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: [
+                                'rgba(245, 158, 11, 0.6)', // Yemek
+                                'rgba(59, 130, 246, 0.6)',  // Ulaşım
+                                'rgba(239, 68, 68, 0.6)',   // Fatura
+                                'rgba(168, 85, 247, 0.6)',  // Eğlence
+                                'rgba(148, 163, 184, 0.6)',  // Diğer
+                            ],
+                            borderColor: [
+                                '#f59e0b', '#3b82f6', '#ef4444', '#a855f7', '#94a3b8'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { color: '#94a3b8', font: { family: 'Outfit' } }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Toast notifications logic
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msgEl = document.getElementById('toastMsg');
+
+            msgEl.textContent = msg;
+            toast.className = `toast ${type} show`;
+
+            if (type === 'success') {
+                icon.className = 'fa-solid fa-circle-check';
+            } else if (type === 'error') {
+                icon.className = 'fa-solid fa-circle-exclamation';
+            } else {
+                icon.className = 'fa-solid fa-circle-info';
+            }
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // AI Configuration Operations
+        function initAiConfig() {
+            const aiMode = sessionStorage.getItem('fincoach_ai_mode') === 'true';
+            const apiKey = sessionStorage.getItem('fincoach_gemini_api_key') || '';
+            
+            document.getElementById('aiModeToggle').checked = aiMode;
+            document.getElementById('userApiKey').value = apiKey;
+            
+            toggleApiKeyContainer(aiMode);
+        }
+
+        function toggleAiMode() {
+            const isChecked = document.getElementById('aiModeToggle').checked;
+            sessionStorage.setItem('fincoach_ai_mode', isChecked);
+            toggleApiKeyContainer(isChecked);
+        }
+
+        function toggleApiKeyContainer(show) {
+            const container = document.getElementById('apiKeyContainer');
+            container.style.display = show ? 'block' : 'none';
+        }
+
+        function saveApiKey() {
+            const val = document.getElementById('userApiKey').value.trim();
+            sessionStorage.setItem('fincoach_gemini_api_key', val);
+        }
+
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('userApiKey');
+            const icon = document.getElementById('toggleApiKeyVisibility');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        function loadLatestAdvice() {
+            const savedAdvice = sessionStorage.getItem('fincoach_latest_advice');
+            if (savedAdvice) {
+                const container = document.getElementById('aiContent');
+                container.innerHTML = marked.parse(savedAdvice);
+                document.getElementById('btnClearAdvice').style.display = 'block';
+            }
+        }
+
+        function clearAdvice() {
+            if (!confirm("Tasarruf önerilerini sıfırlamak istediğinize emin misiniz?")) return;
+            sessionStorage.removeItem('fincoach_latest_advice');
+            const container = document.getElementById('aiContent');
+            container.innerHTML = `
+                <div class="ai-empty-state">
+                    <i class="fa-solid fa-wand-magic-sparkles ai-empty-icon"></i>
+                    <p>Finansal verilerinizi analiz edip size özel tasarruf önerileri ve gelecek senaryoları üretmek için hazır.</p>
+                </div>
+            `;
+            document.getElementById('btnClearAdvice').style.display = 'none';
+            showToast("Tasarruf önerileri sıfırlandı.", "success");
+        }
+    </script>
+</body>
+</html>
